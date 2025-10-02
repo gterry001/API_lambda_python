@@ -16,7 +16,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-print("Mounting.... /")
+
 # Carpeta de estáticos
 BASE_DIR = Path(__file__).resolve().parent
 app.mount(
@@ -27,7 +27,9 @@ app.mount(
 
 @app.get("/run_portfolio_analysis")
 def run_analysis_endpoint():
+    print("Analyzing..... /")
     result = run_portfolio_analysis()
+    print("Analysis ended /")
     return {
         "results": result,
         "grafico_url": f"/static/{result['plot_file']}"
