@@ -3,10 +3,7 @@ import pandas as pd
 import numpy as np
 import datetime
 from tvDatafeed import TvDatafeed, Interval
-import plotly.graph_objects as go
-import plotly.io as pio
-from plotly.subplots import make_subplots
-from plotly.colors import sample_colorscale
+
 
 import time
 import sys
@@ -36,8 +33,7 @@ import requests
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+
 
 
 info = Info(base_url=constants.MAINNET_API_URL, skip_ws=True)
@@ -755,6 +751,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
