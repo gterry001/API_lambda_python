@@ -677,6 +677,35 @@ def build_portfolio_table(portfolio: pd.DataFrame, dfs: dict, invested_capital: 
 
     return portfolio_table
 
+def generate_dfs_for_plots(portfolio):
+    protocol_types = np.unique(portfolio['Protocol type'])
+    data = []
+    for protocol_type in protocol_types:
+        pf = portfolio[portfolio['Protocol type'] == protocol_type]
+        data.append({
+            "Protocol type": protocol_type,
+            "ETH": (pf['ETH TVL'] * pf['Weight']).sum(),
+            "L2":  (pf['L2 TVL']  * pf['Weight']).sum(),
+            "SOL": (pf['SOL TVL'] * pf['Weight']).sum(),
+            "Other": (pf['Other TVL'] * pf['Weight']).sum(),
+        })
+    df_protocol = pd.DataFrame(data)
+    df_protocol['total'] = df_protocol[['ETH', 'L2', 'SOL', 'Other']].sum(axis=1)
+    df_protocol.sort_values('total', ascending=False, inplace=True)
+    
+    # 2) Risk by Chain
+    chains = ['ETH', 'L2', 'SOL', 'Other']
+    risks_chain = [(portfolio[f'{chain} TVL'] * portfolio['Weight']).sum() for chain in chains]
+    df_chain = pd.DataFrame({"Label": chains, "Risk": risks_chain})
+    
+    # 3) Risk by FDV
+    sizes = ['Mega', 'Large', 'Mid', 'Micro']
+    xaxes_titles = ['Mega (>$10B)', 'Large ($1B-10B)', 'Mid ($100M-1B)', 'Micro (<$100M)']
+    risks_size = [portfolio[portfolio['Size'] == s]['Weight'].sum() for s in sizes]
+    df_size = pd.DataFrame({"Label": xaxes_titles, "Risk": risks_size})
+
+    return df_size, df_chain, df_protocol
+
 def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5):
     """
     Ejecuta el pipeline completo de análisis de portfolio:
@@ -700,7 +729,15 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
 
     # 4. Construye tabla del portfolio
     portfolio_table = build_portfolio_table(portfolio, dfs, invested_capital, total_vol)
-
+    
+    # 5. Genera dfs para plots
+    #df_size, df_chain, df_protocol = generate_dfs_for_plots(portfolio)
+    #dfs_for_plots = {
+    #    'protocol': df_protocol,
+    #    'size': df_size,
+    #    'chain': df_chain,
+    #    'betas': df_betas
+    #}
     return {
         "portfolio": portfolio,
         "dfs": dfs,
@@ -751,6 +788,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
