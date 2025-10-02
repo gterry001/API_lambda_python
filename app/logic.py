@@ -28,30 +28,7 @@ import json
 
 s3 = boto3.client("s3")
 BUCKET = "fastapi-bucket-project"
-def save_dfs_to_s3(dfs: dict, prefix: str = "dfs_cache"):
-    urls = {}
-    for coin, df in dfs.items():
-        # Convierte DataFrame a JSON
-        json_data = df.astype(object).where(pd.notnull(df), None).to_dict(orient="records")
-        json_str = json.dumps(json_data, default=str)
-
-        key = f"{prefix}/{coin}.json"
-        s3.put_object(
-            Bucket=BUCKET,
-            Key=key,
-            Body=json_str.encode("utf-8"),
-            ContentType="application/json"
-        )
-
-        # Genera URL firmada (válida 1h)
-        url = s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": BUCKET, "Key": key},
-            ExpiresIn=3600
-        )
-        urls[coin] = url
-    return urls
-    
+   
 
 info = Info(base_url=constants.MAINNET_API_URL, skip_ws=True)
 meta, ctxs = info.meta_and_asset_ctxs()
@@ -748,8 +725,6 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     """
     # 1. Descarga portfolio + datos de mercado
     portfolio, dfs = download_data()
-    # Guardar dfs en S3
-    dfs_urls = save_dfs_to_s3(dfs,"data")
     
     # 2. Calcula factores de riesgo
     risk_factors = compute_risk_factors()
@@ -770,10 +745,7 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     #}
     return {
         "portfolio": clean_for_json(portfolio),
-        "risk_factors": clean_for_json(risk_factors),
-        "betas": clean_for_json(df_betas),
-        "portfolio_table": clean_for_json(portfolio_table),
-        "dfs_urls": dfs_urls
+        "betas": clean_for_json(df_betas)
     }
 
 def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> dict:
@@ -819,6 +791,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
