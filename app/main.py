@@ -1,10 +1,20 @@
 # main.py
-from fastapi import FastAPI
+#from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+#from fastapi.middleware.cors import CORSMiddleware
 from .logic import run_portfolio_analysis
+#from mangum import Mangum
+#from pathlib import Path
+# app/main.py
+import os
+from datetime import date, datetime
+from typing import Optional
+
+import pandas as pd
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
-from pathlib import Path
+
 
 app = FastAPI(title="Portfolio Risk API")
 
@@ -32,9 +42,89 @@ def root():
     return {"message": "API is running"}
 handler = Mangum(app)
 
+# ---------- Helpers de serialización ----------
+def _iso(x):
+    return x.isoformat() if hasattr(x, "isoformat") else x
 
+def df_to_records(df: pd.DataFrame):
+    if df is None or df.empty:
+        return []
+    # Limpia NaN -> None y fechas -> str
+    out = (
+        df.copy()
+        .astype(object)
+        .where(pd.notnull(df), None)
+        .applymap(_iso)
+        .to_dict(orient="records")
+    )
+    return out
 
+# ---------- Pipelines ----------
+def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5):
+    # 1) Datos base
+    portfolio, dfs = download_data()
+    # 2) Factores
+    risk_factors = compute_risk_factors()
+    # 3) Betas
+    df_betas = compute_betas(dfs, portfolio, risk_factors)
+    # 4) Tabla formateada
+    portfolio_table = build_portfolio_table(portfolio, dfs, invested_capital, total_vol)
 
+    return {
+        "portfolio": df_to_records(portfolio),
+        "risk_factors": df_to_records(risk_factors),
+        "betas": df_to_records(df_betas),
+        "portfolio_table": df_to_records(portfolio_table),
+    }
+@app.get("/analysis")
+def analysis(
+    invested_capital: float = Query(5000.0, ge=0),
+    total_vol: float = Query(0.5, ge=0)
+):
+    result = run_portfolio_analysis(invested_capital, total_vol)
+    return result
+@app.get("/ohlc/{coin}")
+def ohlc(
+    coin: str,
+    start: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    end: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    limit: int = Query(3000, ge=1, le=10000),
+):
+    # Carga datos (puedes cachear en /tmp si quieres acelerar)
+    portfolio, dfs = download_data()
+    if coin not in dfs:
+        raise HTTPException(status_code=404, detail="Coin not found")
+
+    df = dfs[coin].copy()
+
+    # Normaliza fechas si existen
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+
+    # Filtros
+    if start:
+        start_d = datetime.strptime(start, "%Y-%m-%d").date()
+        df = df[df["date"] >= start_d] if "date" in df.columns else df
+    if end:
+        end_d = datetime.strptime(end, "%Y-%m-%d").date()
+        df = df[df["date"] <= end_d] if "date" in df.columns else df
+
+    # Limita filas
+    if len(df) > limit:
+        df = df.tail(limit)
+
+    return df_to_records(df)
+
+@app.get("/dashboard-data")
+def dashboard_data():
+    return run_dashboard_data()
+
+@app.get("/coins")
+def coins():
+    portfolio, dfs = download_data()
+    # Preferimos del portfolio para “oficiales”:
+    coin_list = sorted(pd.Series(portfolio["Coin"]).dropna().unique().tolist())
+    return {"coins": coin_list}
 
 
 
