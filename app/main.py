@@ -1,6 +1,6 @@
 from fastapi.staticfiles import StaticFiles
 from .logic import run_portfolio_analysis,download_data
-import os,threading, time, boto3
+import os,threading, time, boto3,json
 from datetime import date, datetime
 from typing import Optional
 import pandas as pd
