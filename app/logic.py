@@ -33,7 +33,7 @@ def save_dfs_to_s3(dfs: dict, prefix: str = "dfs_cache"):
     for coin, df in dfs.items():
         # Convierte DataFrame a JSON
         json_data = df.astype(object).where(pd.notnull(df), None).to_dict(orient="records")
-        json_str = json.dumps(json_data, default=str))
+        json_str = json.dumps(json_data, default=str)
 
         key = f"{prefix}/{coin}.json"
         s3.put_object(
@@ -819,6 +819,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
