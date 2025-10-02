@@ -2,7 +2,7 @@
 #from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 #from fastapi.middleware.cors import CORSMiddleware
-from .logic import run_portfolio_analysis
+from .logic import run_portfolio_analysis,download_data
 #from mangum import Mangum
 #from pathlib import Path
 # app/main.py
