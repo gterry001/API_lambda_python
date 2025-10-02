@@ -31,12 +31,18 @@ def start_job():
     job_id = str(uuid4())
 
     # Estado inicial en S3
-    s3.put_object(
+    try:
+        s3.put_object(
         Bucket=BUCKET_NAME,
         Key=f"jobs/{job_id}.json",
-        Body=json.dumps({"status": "running"}),
+        Body=json.dumps({"status": "running"}).encode("utf-8"),
         ContentType="application/json"
-    )
+        )
+    except Exception as e:
+        import traceback
+        print("❌ Error en put_object:", e)
+        print(traceback.format_exc())
+        raise
 
     # Lanzar análisis en un thread
     threading.Thread(target=run_portfolio_analysis, args=(job_id,), daemon=True).start()
