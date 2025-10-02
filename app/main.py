@@ -17,13 +17,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Carpeta de estáticos
-BASE_DIR = Path(__file__).resolve().parent
-app.mount(
-    "/static",
-    StaticFiles(directory=BASE_DIR / "static"),
-    name="static"
-)
 
 @app.get("/run_portfolio_analysis")
 def run_analysis_endpoint():
