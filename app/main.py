@@ -68,13 +68,13 @@ def run_portfolio_analysis(job_id):
             ContentType="application/json"
         )
         print(f"Job {job_id} terminado")
-     except Exception as e:
+    except Exception as e:
         s3.put_object(
             Bucket=BUCKET_NAME,
             Key=f"jobs/{job_id}.json",
             Body=json.dumps({"status": "error", "error": str(e)}),
             ContentType="application/json"
-        )
+    )
 @app.get("/")
 def root():
     print("Exexuting...")
