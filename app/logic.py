@@ -3,30 +3,21 @@ import pandas as pd
 import numpy as np
 import datetime
 from tvDatafeed import TvDatafeed, Interval
-
-
+import boto3
+from io import StringIO
 import time
 import sys
 from tqdm import tqdm
-
 import warnings
 warnings.filterwarnings('ignore')
-
 import os
 os.environ["NUMBA_CACHE_DIR"] = "/tmp/numba_cache"
 import vectorbt as vbt
 import arcticdb as adb
 from scipy.stats import rankdata
-
 import arcticdb as adb
-
 from fredapi import Fred
-
 import ta
-
-#####################################################################################
-# BUILT-IN FUNCTIONS
-#####################################################################################
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
 import requests
@@ -35,17 +26,32 @@ import pandas as pd
 import numpy as np
 import json
 
-def to_serializable(val):
-    """Convierte objetos raros a algo que json.dumps pueda serializar"""
-    if isinstance(val, (np.integer,)):
-        return int(val)
-    if isinstance(val, (np.floating,)):
-        return float(val)
-    if isinstance(val, (np.ndarray,)):
-        return val.tolist()
-    if isinstance(val, (datetime.date, datetime.datetime)):
-        return val.isoformat()
-    return val
+s3 = boto3.client("s3")
+BUCKET = "fastapi-bucket-project"
+def save_dfs_to_s3(dfs: dict, prefix: str = "dfs_cache"):
+    urls = {}
+    for coin, df in dfs.items():
+        # Convierte DataFrame a JSON
+        json_data = df.astype(object).where(pd.notnull(df), None).to_dict(orient="records")
+        json_str = json.dumps(json_data)
+
+        key = f"{prefix}/{coin}.json"
+        s3.put_object(
+            Bucket=BUCKET,
+            Key=key,
+            Body=json_str.encode("utf-8"),
+            ContentType="application/json"
+        )
+
+        # Genera URL firmada (válida 1h)
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": BUCKET, "Key": key},
+            ExpiresIn=3600
+        )
+        urls[coin] = url
+    return urls
+    
 
 info = Info(base_url=constants.MAINNET_API_URL, skip_ws=True)
 meta, ctxs = info.meta_and_asset_ctxs()
@@ -742,7 +748,9 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     """
     # 1. Descarga portfolio + datos de mercado
     portfolio, dfs = download_data()
-
+    # Guardar dfs en S3
+    dfs_urls = save_dfs_to_s3(dfs,"data")
+    
     # 2. Calcula factores de riesgo
     risk_factors = compute_risk_factors()
 
@@ -760,14 +768,14 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     #    'chain': df_chain,
     #    'betas': df_betas
     #}
-    result = {
-        "portfolio": portfolio.astype(object).where(pd.notnull(portfolio), None).to_dict(orient="records"),
-        "risk_factors": risk_factors.astype(object).where(pd.notnull(risk_factors), None).to_dict(orient="records"),
-        "betas": df_betas.astype(object).where(pd.notnull(df_betas), None).to_dict(orient="records"),
-        "portfolio_table": portfolio_table.astype(object).where(pd.notnull(portfolio_table), None).to_dict(orient="records"),
-        "dfs": {k: v.astype(object).to_dict(orient="records") for k,v in dfs.items()}
+    return {
+        "portfolio": clean_for_json(portfolio),
+        "risk_factors": clean_for_json(risk_factors),
+        "betas": clean_for_json(df_betas),
+        "portfolio_table": clean_for_json(portfolio_table),
+        "dfs_urls": dfs_urls
     }
-    return json.loads(json.dumps(result, default=to_serializable))
+
 def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> dict:
     """
     Prepara los datos necesarios para el dashboard en formato JSON.
@@ -811,6 +819,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
