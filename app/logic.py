@@ -706,6 +706,14 @@ def generate_dfs_for_plots(portfolio):
 
     return df_size, df_chain, df_protocol
 
+def clean_for_json(df: pd.DataFrame):
+    return (
+        df.astype(object)
+        .where(pd.notnull(df), None)
+        .applymap(lambda x: x.isoformat() if hasattr(x, "isoformat") else x)
+        .to_dict(orient="records")
+    )
+
 def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5):
     """
     Ejecuta el pipeline completo de análisis de portfolio:
@@ -739,11 +747,11 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     #    'betas': df_betas
     #}
     return {
-        "portfolio": portfolio.astype(object).where(pd.notnull(portfolio), None).to_dict(orient="records"),
-        "risk_factors": risk_factors.astype(object).where(pd.notnull(risk_factors), None).to_dict(orient="records"),
-        "betas": df_betas.astype(object).where(pd.notnull(df_betas), None).to_dict(orient="records"),
-        "portfolio_table": portfolio_table.astype(object).where(pd.notnull(portfolio_table), None).to_dict(orient="records"),
-        "dfs": {k: v.astype(object).to_dict(orient="records") for k,v in dfs.items()}
+        "portfolio": clean_for_json(portfolio),
+        "risk_factors": clean_for_json(risk_factors),
+        "betas": clean_for_json(df_betas),
+        "portfolio_table": clean_for_json(portfolio_table),
+        "dfs": {k: clean_for_json(v) for k, v in dfs.items()}
     }
 def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> dict:
     """
@@ -788,6 +796,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
