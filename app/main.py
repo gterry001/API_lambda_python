@@ -24,8 +24,7 @@ def run_analysis_endpoint():
     result = run_portfolio_analysis()
     print("Analysis ended /")
     return {
-        "results": result,
-        "grafico_url": f"/static/{result['plot_file']}"
+        "results": result
     }
 @app.get("/")
 def root():
