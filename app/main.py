@@ -1,20 +1,16 @@
-# main.py
-#from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-#from fastapi.middleware.cors import CORSMiddleware
 from .logic import run_portfolio_analysis,download_data
-#from mangum import Mangum
-#from pathlib import Path
-# app/main.py
-import os
+import os,threading, time, boto3
 from datetime import date, datetime
 from typing import Optional
-
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
+from uuid import uuid4
 
+s3 = boto3.client("s3")
+BUCKET_NAME = "fastapi-bucket-project"
 
 app = FastAPI(title="Portfolio Risk API")
 
@@ -26,16 +22,59 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Diccionario en memoria para simular resultados
+jobs = {}
+
+@app.get("/start-analysis")
+def start_job():
+    """Crea un job y lo marca como running en S3"""
+    job_id = str(uuid4())
+
+    # Estado inicial en S3
+    s3.put_object(
+        Bucket=BUCKET_NAME,
+        Key=f"jobs/{job_id}.json",
+        Body=json.dumps({"status": "running"}),
+        ContentType="application/json"
+    )
+
+    # Lanzar análisis en un thread
+    threading.Thread(target=run_portfolio_analysis, args=(job_id,), daemon=True).start()
+
+    return {"job_id": job_id, "status": "running"}
+
+@app.get("/get-result/{job_id}")
+def get_result(job_id: str):
+    """Consulta el estado de un job en S3"""
+    try:
+        obj = s3.get_object(Bucket=BUCKET_NAME, Key=f"jobs/{job_id}.json")
+        body = obj["Body"].read().decode("utf-8")
+        return json.loads(body)
+    except s3.exceptions.NoSuchKey:
+        return {"error": "Job not found"}
 
 
 @app.get("/run_portfolio_analysis")
-def run_analysis_endpoint():
-    print("Analyzing..... /")
-    result = run_portfolio_analysis()
-    print("Analysis ended /")
-    return {
-        "results": result
-    }
+def run_portfolio_analysis(job_id):
+    try:
+        print(f"Job {job_id} lanzado")
+        print("Analyzing..... /")
+        result = run_portfolio_analysis()
+        print("Analysis ended /")
+        s3.put_object(
+            Bucket=BUCKET_NAME,
+            Key=f"jobs/{job_id}.json",
+            Body=json.dumps({"status": "done", "result": result}),
+            ContentType="application/json"
+        )
+        print(f"Job {job_id} terminado")
+     except Exception as e:
+        s3.put_object(
+            Bucket=BUCKET_NAME,
+            Key=f"jobs/{job_id}.json",
+            Body=json.dumps({"status": "error", "error": str(e)}),
+            ContentType="application/json"
+        )
 @app.get("/")
 def root():
     print("Exexuting...")
@@ -59,13 +98,6 @@ def df_to_records(df: pd.DataFrame):
     )
     return out
 
-@app.get("/analysis")
-def analysis(
-    invested_capital: float = Query(5000.0, ge=0),
-    total_vol: float = Query(0.5, ge=0)
-):
-    result = run_portfolio_analysis(invested_capital, total_vol)
-    return result
 @app.get("/ohlc/{coin}")
 def ohlc(
     coin: str,
