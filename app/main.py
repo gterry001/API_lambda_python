@@ -13,13 +13,16 @@ def handler(event, context):
             print(f"👉 Procesando job {job_id}")
 
             # Ejecuta tu análisis
-            result = run_portfolio_analysis()
-
+            porfolio,df_betas = run_portfolio_analysis()
+            
+            # Generar datos para dashboard
+            dashboard_data = prepare_dashboard_data(portfolio, df_betas)
+            
             # Guardar resultado en S3
             s3.put_object(
                 Bucket=BUCKET_NAME,
                 Key=f"jobs/{job_id}.json",
-                Body=json.dumps({"status": "done", "result": result}).encode("utf-8"),
+                Body=json.dumps({"status": "done", "result": dashboard_data}).encode("utf-8"),
                 ContentType="application/json"
             )
 
