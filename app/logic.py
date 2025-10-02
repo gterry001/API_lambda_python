@@ -36,10 +36,9 @@ import requests
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from dash import Dash, dcc, html, dash_table, Input, Output
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import webbrowser
+
 
 info = Info(base_url=constants.MAINNET_API_URL, skip_ws=True)
 meta, ctxs = info.meta_and_asset_ctxs()
@@ -756,5 +755,6 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
