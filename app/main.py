@@ -45,7 +45,7 @@ def start_job():
         raise
 
     # Lanzar análisis en un thread
-    threading.Thread(target=run_portfolio_analysis, args=(job_id,), daemon=True).start()
+    threading.Thread(target=run_portfolio, args=(job_id,), daemon=True).start()
 
     return {"job_id": job_id, "status": "running"}
 
@@ -61,7 +61,7 @@ def get_result(job_id: str):
 
 
 @app.get("/run_portfolio_analysis")
-def run_portfolio_analysis(job_id):
+def run_portfolio(job_id):
     try:
         print(f"Job {job_id} lanzado")
         print("Analyzing..... /")
