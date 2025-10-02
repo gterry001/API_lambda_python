@@ -59,23 +59,6 @@ def df_to_records(df: pd.DataFrame):
     )
     return out
 
-# ---------- Pipelines ----------
-def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5):
-    # 1) Datos base
-    portfolio, dfs = download_data()
-    # 2) Factores
-    risk_factors = compute_risk_factors()
-    # 3) Betas
-    df_betas = compute_betas(dfs, portfolio, risk_factors)
-    # 4) Tabla formateada
-    portfolio_table = build_portfolio_table(portfolio, dfs, invested_capital, total_vol)
-
-    return {
-        "portfolio": df_to_records(portfolio),
-        "risk_factors": df_to_records(risk_factors),
-        "betas": df_to_records(df_betas),
-        "portfolio_table": df_to_records(portfolio_table),
-    }
 @app.get("/analysis")
 def analysis(
     invested_capital: float = Query(5000.0, ge=0),
