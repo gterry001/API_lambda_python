@@ -743,7 +743,7 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
         "risk_factors": risk_factors.astype(object).where(pd.notnull(risk_factors), None).to_dict(orient="records"),
         "betas": df_betas.astype(object).where(pd.notnull(df_betas), None).to_dict(orient="records"),
         "portfolio_table": portfolio_table.astype(object).where(pd.notnull(portfolio_table), None).to_dict(orient="records"),
-        #"dfs": {k: v.astype(object).to_dict(orient="records") for k,v in dfs.items()}
+        "dfs": {k: v.astype(object).to_dict(orient="records") for k,v in dfs.items()}
     }
 def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> dict:
     """
@@ -788,6 +788,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
