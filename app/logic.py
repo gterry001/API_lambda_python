@@ -707,8 +707,11 @@ def generate_dfs_for_plots(portfolio):
     return df_size, df_chain, df_protocol
 
 def clean_for_json(df: pd.DataFrame):
+    if df is None or df.empty:
+        return []
     return (
-        df.astype(object)
+        df.copy()
+        .astype(object)
         .where(pd.notnull(df), None)
         .applymap(lambda x: x.isoformat() if hasattr(x, "isoformat") else x)
         .to_dict(orient="records")
@@ -796,6 +799,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
