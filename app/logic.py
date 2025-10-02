@@ -485,7 +485,7 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
+    
     while True:
         try:
             # SOL TVL, ex-price
@@ -496,8 +496,8 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
-     while True:
+    
+    while True:
         try:
             # DEX volume
             dex_vol = dex_volume()
@@ -506,7 +506,7 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
+    
     while True:
         try:
             # Market beta
@@ -517,7 +517,7 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
+    
     while True:
         try:
             # Flight-to-qualith
@@ -528,8 +528,8 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
-
+    
+    
     while True:
         try:
             # Rotation to majors
@@ -540,7 +540,7 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
+    
     while True:
         try:
             # SOL ecosystem
@@ -551,8 +551,8 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
-
+    
+    
     while True:
         try:
             # ETH ecosystem
@@ -563,8 +563,8 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
-
+    
+    
     while True:
         try:
             # Others, altseason
@@ -575,7 +575,7 @@ def compute_risk_factors():
         except:
             time.sleep(5.)
             continue
-
+    
     risk_factors = pd.merge(eth_tvl, sol_tvl, on='date', how='inner')
     risk_factors = pd.merge(risk_factors, dex_vol, on='date', how='inner')
     risk_factors = pd.merge(risk_factors, btc, on='date', how='inner')
@@ -754,3 +754,4 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
