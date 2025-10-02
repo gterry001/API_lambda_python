@@ -13,7 +13,7 @@ def handler(event, context):
             print(f"👉 Procesando job {job_id}")
 
             # Ejecuta tu análisis
-            result = run_portfolio_analysis(job_id)
+            result = run_portfolio_analysis()
 
             # Guardar resultado en S3
             s3.put_object(
