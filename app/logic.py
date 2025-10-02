@@ -15,6 +15,8 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 
+import os
+os.environ["NUMBA_CACHE_DIR"] = "/tmp/numba_cache"
 import vectorbt as vbt
 import arcticdb as adb
 from scipy.stats import rankdata
@@ -754,4 +756,5 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
