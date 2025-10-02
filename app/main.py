@@ -25,11 +25,11 @@ app.mount(
     name="static"
 )
 
-@app.get("/run-analysis")
+@app.get("/run_portfolio_analysis")
 def run_analysis_endpoint():
-    result = run_analysis()
+    result = run_portfolio_analysis()
     return {
-        "ordenes": result["ordenes"],
+        "results": result,
         "grafico_url": f"/static/{result['plot_file']}"
     }
 @app.get("/")
