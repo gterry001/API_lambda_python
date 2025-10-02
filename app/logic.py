@@ -33,8 +33,19 @@ import requests
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
+import json
 
-
+def to_serializable(val):
+    """Convierte objetos raros a algo que json.dumps pueda serializar"""
+    if isinstance(val, (np.integer,)):
+        return int(val)
+    if isinstance(val, (np.floating,)):
+        return float(val)
+    if isinstance(val, (np.ndarray,)):
+        return val.tolist()
+    if isinstance(val, (datetime.date, datetime.datetime)):
+        return val.isoformat()
+    return val
 
 info = Info(base_url=constants.MAINNET_API_URL, skip_ws=True)
 meta, ctxs = info.meta_and_asset_ctxs()
@@ -749,13 +760,14 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     #    'chain': df_chain,
     #    'betas': df_betas
     #}
-    return {
-        "portfolio": clean_for_json(portfolio),
-        "risk_factors": clean_for_json(risk_factors),
-        "betas": clean_for_json(df_betas),
-        "portfolio_table": clean_for_json(portfolio_table),
-        "dfs": {k: clean_for_json(v) for k, v in dfs.items()}
+    result = {
+        "portfolio": portfolio.astype(object).where(pd.notnull(portfolio), None).to_dict(orient="records"),
+        "risk_factors": risk_factors.astype(object).where(pd.notnull(risk_factors), None).to_dict(orient="records"),
+        "betas": df_betas.astype(object).where(pd.notnull(df_betas), None).to_dict(orient="records"),
+        "portfolio_table": portfolio_table.astype(object).where(pd.notnull(portfolio_table), None).to_dict(orient="records"),
+        "dfs": {k: v.astype(object).to_dict(orient="records") for k,v in dfs.items()}
     }
+    return json.loads(json.dumps(result, default=to_serializable))
 def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> dict:
     """
     Prepara los datos necesarios para el dashboard en formato JSON.
@@ -799,6 +811,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
