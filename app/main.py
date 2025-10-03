@@ -1,5 +1,6 @@
 import json, boto3, traceback
 from .logic import run_portfolio_analysis , prepare_dashboard_data
+import pandas as pd
 
 s3 = boto3.client("s3")
 BUCKET_NAME = "fastapi-bucket-project"  # 👈 cámbialo
