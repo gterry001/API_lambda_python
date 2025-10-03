@@ -744,8 +744,8 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
     #    'betas': df_betas
     #}
     return {
-        "portfolio": clean_for_json(portfolio),
-        "betas": clean_for_json(df_betas)
+        "portfolio": portfolio,
+        "betas": df_betas
     }
 
 def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> dict:
@@ -791,6 +791,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
