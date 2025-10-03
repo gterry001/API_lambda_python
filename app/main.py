@@ -15,7 +15,7 @@ def handler(event, context):
             # Ejecuta tu análisis
             result = run_portfolio_analysis()
             # Generar datos para dashboard
-            print(result["portfolio"])
+            print(result)
             portfolio = pd.DataFrame(result["portfolio"])
             df_betas = pd.DataFrame(result["df_betas"])
             print(portfolio)
