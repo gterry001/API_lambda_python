@@ -18,8 +18,9 @@ def handler(event, context):
             # Generar datos para dashboard
             print(result)
             portfolio = pd.DataFrame(result["portfolio"])
-            df_betas = pd.DataFrame(result["df_betas"])
+            df_betas = pd.DataFrame(result["betas"])
             print(portfolio)
+            print(df_betas)
             dashboard_data = prepare_dashboard_data(portfolio, df_betas)
             
             # Guardar resultado en S3
