@@ -724,10 +724,7 @@ def run_portfolio_analysis(invested_capital: float = 5e3, total_vol: float = 0.5
         dict: Resultados con portfolio, risk_factors, betas y tabla de portfolio.
     """
     # 1. Descarga portfolio + datos de mercado
-    result = download_data()
-    print(result["portfolio"])
-    portfolio = result["portfolio"]
-    dfs = result["dfs"]
+    portfolio,dfs = download_data()
     # 2. Calcula factores de riesgo
     risk_factors = compute_risk_factors()
 
@@ -793,6 +790,7 @@ def prepare_dashboard_data(portfolio: pd.DataFrame, df_betas: pd.DataFrame) -> d
         "size": df_size.to_dict(orient="records"),
         "betas": df_betas.to_dict(orient="records"),
     }
+
 
 
 
