@@ -16,6 +16,7 @@ def handler(event, context):
             portfolio,df_betas = run_portfolio_analysis()
             
             # Generar datos para dashboard
+            print(portfolio)
             dashboard_data = prepare_dashboard_data(portfolio, df_betas)
             
             # Guardar resultado en S3
