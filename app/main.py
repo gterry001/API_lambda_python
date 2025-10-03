@@ -13,8 +13,8 @@ def handler(event, context):
             print(f"👉 Procesando job {job_id}")
 
             # Ejecuta tu análisis
-            portfolio,df_betas = run_portfolio_analysis()
-            
+            result = run_portfolio_analysis()
+            print(result)
             # Generar datos para dashboard
             print(portfolio)
             dashboard_data = prepare_dashboard_data(portfolio, df_betas)
